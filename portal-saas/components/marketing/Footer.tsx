@@ -29,9 +29,9 @@ export default function Footer() {
                         <Link href="/terms" className="text-sm text-gray-400 hover:text-white transition-colors">
                             Términos de Uso
                         </Link>
-                        <Link href="/contact" className="text-sm text-gray-400 hover:text-white transition-colors">
+                        <a href="mailto:victorbetha@gmail.com" className="text-sm text-gray-400 hover:text-white transition-colors">
                             Contacto
-                        </Link>
+                        </a>
                     </div>
                 </div>
             </div>
