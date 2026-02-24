@@ -1,4 +1,9 @@
 {
+  "scripts": {
+    "dev": "npm run dev --prefix portal-saas",
+    "build": "npm run build --prefix portal-saas",
+    "start": "npm run start --prefix portal-saas"
+  },
   "dependencies": {
     "@prisma/adapter-pg": "^7.4.1",
     "@prisma/client": "^7.4.1",
