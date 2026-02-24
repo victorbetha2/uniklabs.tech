@@ -23,8 +23,7 @@ export default function HeroSection() {
             <div className="container relative z-10 mx-auto px-4 text-center">
                 {/* Badge */}
                 <div className="inline-flex items-center gap-2 rounded-full border border-lime-500/30 bg-lime-500/10 px-4 py-1.5 text-sm font-medium text-lime-400 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                    <span>🚀</span>
-                    <span>Portal SaaS Unificado</span>
+                    <span>Ecosistema Digital Empresarial</span>
                 </div>
 
                 {/* Heading */}

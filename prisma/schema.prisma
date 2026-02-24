@@ -20,13 +20,57 @@ model User {
 }
 
 model App {
-  id             String          @id
-  name           String
-  description    String?
-  url            String?
-  is_active      Boolean         @default(true)
-  status         String          @default("draft") // 'draft' | 'published' — controla si la página está publicada
-  subscriptions  Subscription[]
+  id          String   @id @default(cuid())
+  slug        String   @unique  // "ent", "finaly"
+  name        String            // "ENT"
+  tagline     String            // "Reportes y gestión sin límites"
+  description String            // Descripción larga para el hero
+  badge       String            // "Suite Empresarial"
+  heroAccent  String            // La palabra que va en lime en el H1
+  isActive    Boolean  @default(true)
+  comingSoon  Boolean  @default(false)
+  iconName    String            // nombre del ícono lucide: "Building2"
+  tags        String[]          // ["Reportes", "Dashboard", "Multi-usuario"]
+  stats       Json              // [{label: "Reportes/mes", value: "500+"}, ...]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  features    AppFeature[]
+  plans       AppPlan[]
+  faqs        AppFAQ[]
+  subscriptions Subscription[]
+}
+
+model AppFeature {
+  id          String  @id @default(cuid())
+  appId       String
+  app         App     @relation(fields: [appId], references: [id])
+  iconName    String  // "BarChart3"
+  title       String  // "Reportes personalizados"
+  description String  // "Genera reportes a medida..."
+  order       Int     @default(0)
+}
+
+model AppPlan {
+  id           String   @id @default(cuid())
+  appId        String
+  app          App      @relation(fields: [appId], references: [id])
+  name         String   // "Starter", "Team", "Business", "Enterprise"
+  userRange    String   // "1 – 4 usuarios", "Sin límite"
+  price        Decimal  // 29.00
+  description  String   // "Perfecto para equipos pequeños"
+  isHighlighted Boolean @default(false)  // true solo para el plan destacado
+  paypalPlanId String?  // ID del plan en PayPal (se llena en Día 5)
+  features     Json     // [{text: "Reportes ilimitados", included: true}, ...]
+  order        Int      @default(0)
+}
+
+model AppFAQ {
+  id       String @id @default(cuid())
+  appId    String
+  app      App    @relation(fields: [appId], references: [id])
+  question String
+  answer   String
+  order    Int    @default(0)
 }
 
 model Subscription {
@@ -57,3 +101,4 @@ model PaymentHistory {
   created_at            DateTime     @default(now())
   subscription          Subscription @relation(fields: [subscription_id], references: [id])
 }
+

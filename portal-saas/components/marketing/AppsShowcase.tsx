@@ -19,11 +19,11 @@ const apps = [
         id: "finaly",
         icon: TrendingUp,
         name: "Finaly",
-        status: "Disponible",
+        status: "Próximamente",
         description: "Gestión inteligente de finanzas personales. Conecta tus cuentas, visualiza gastos y toma control de tu dinero.",
         tags: ["Finanzas", "Analytics", "Personal"],
         link: "/apps/finaly",
-        available: true,
+        available: false,
     },
     {
         id: "custom",

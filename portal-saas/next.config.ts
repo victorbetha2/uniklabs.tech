@@ -5,7 +5,7 @@ const portalRoot = path.resolve(__dirname);
 
 const nextConfig: NextConfig = {
   turbopack: {
-    root: portalRoot,
+    root: path.resolve(portalRoot, ".."),
   },
   webpack: (config) => {
     config.context = portalRoot;
