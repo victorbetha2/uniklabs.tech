@@ -1,8 +1,15 @@
 {
   "dependencies": {
-    "@prisma/client": "^7.4.1"
+    "@prisma/adapter-pg": "^7.4.1",
+    "@prisma/client": "^7.4.1",
+    "pg": "^8.18.0"
   },
   "devDependencies": {
-    "prisma": "^7.4.1"
+    "dotenv": "^16.4.5",
+    "prisma": "^7.4.1",
+    "tsx": "^4.19.2"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }
