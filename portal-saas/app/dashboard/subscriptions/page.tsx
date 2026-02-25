@@ -1,5 +1,10 @@
-import { CreditCard } from "lucide-react";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { CreditCard, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -18,18 +23,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-// Mock data – replace with Prisma query
-const mockSubscriptions = [
-  {
-    id: "1",
-    app: "ENT",
-    plan: "Team",
-    status: "active",
-    startedAt: "01 Feb 2025",
-    nextPayment: "15 Mar 2025",
-    amount: "$29.00",
-  },
-];
+type Subscription = {
+  id: string;
+  status: string;
+  plan: string;
+  started_at: string;
+  current_period_end: string | null;
+  app: {
+    id: string;
+    name: string;
+  };
+};
 
 const statusVariantMap: Record<
   string,
@@ -48,7 +52,81 @@ const statusLabelMap: Record<string, string> = {
   pending: "Pendiente",
 };
 
+function formatDate(iso: string | null): string {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("es-ES", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export default function SubscriptionsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCancelling, setIsCancelling] = useState<string | null>(null);
+
+  useEffect(() => {
+    const success = searchParams.get("success");
+    const cancelled = searchParams.get("cancelled");
+
+    if (success === "true") {
+      toast.success("¡Suscripción activada!", {
+        description: "Tu suscripción ha sido procesada. Puede tardar unos minutos en activarse.",
+      });
+      router.replace("/dashboard/subscriptions");
+    } else if (cancelled === "true") {
+      toast.error("Suscripción cancelada", {
+        description: "Puedes intentarlo de nuevo cuando quieras.",
+      });
+      router.replace("/dashboard/subscriptions");
+    }
+  }, [searchParams, router]);
+
+  useEffect(() => {
+    async function fetchSubscriptions() {
+      try {
+        const res = await fetch("/api/subscriptions");
+        if (!res.ok) throw new Error("Failed to fetch");
+        const data = (await res.json()) as { subscriptions: Subscription[] };
+        setSubscriptions(data.subscriptions);
+      } catch {
+        toast.error("No se pudieron cargar las suscripciones.");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    void fetchSubscriptions();
+  }, []);
+
+  async function handleCancel(subscriptionId: string) {
+    setIsCancelling(subscriptionId);
+    try {
+      const res = await fetch("/api/subscriptions/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscriptionId }),
+      });
+      const data = (await res.json()) as { success?: boolean; error?: string };
+      if (!res.ok || !data.success) {
+        toast.error(data.error ?? "No se pudo cancelar la suscripción.");
+        return;
+      }
+      toast.success("Suscripción cancelada correctamente.");
+      setSubscriptions((prev) =>
+        prev.map((s) =>
+          s.id === subscriptionId ? { ...s, status: "cancelled" } : s
+        )
+      );
+    } catch {
+      toast.error("Error de conexión. Intenta de nuevo.");
+    } finally {
+      setIsCancelling(null);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -69,7 +147,11 @@ export default function SubscriptionsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {mockSubscriptions.length === 0 ? (
+          {isLoading ? (
+            <div className="py-12 flex justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : subscriptions.length === 0 ? (
             <div className="py-12 text-center">
               <CreditCard className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
               <p className="text-muted-foreground mb-4">
@@ -88,31 +170,36 @@ export default function SubscriptionsPage() {
                   <TableHead>Estado</TableHead>
                   <TableHead>Inicio</TableHead>
                   <TableHead>Próximo pago</TableHead>
-                  <TableHead>Monto</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockSubscriptions.map((sub) => (
+                {subscriptions.map((sub) => (
                   <TableRow key={sub.id}>
-                    <TableCell className="font-medium">{sub.app}</TableCell>
-                    <TableCell>{sub.plan}</TableCell>
+                    <TableCell className="font-medium">{sub.app.name}</TableCell>
+                    <TableCell className="capitalize">{sub.plan}</TableCell>
                     <TableCell>
-                      <Badge
-                        variant={
-                          statusVariantMap[sub.status] ?? "secondary"
-                        }
-                      >
+                      <Badge variant={statusVariantMap[sub.status] ?? "secondary"}>
                         {statusLabelMap[sub.status] ?? sub.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{sub.startedAt}</TableCell>
-                    <TableCell>{sub.nextPayment}</TableCell>
-                    <TableCell>{sub.amount}</TableCell>
+                    <TableCell>{formatDate(sub.started_at)}</TableCell>
+                    <TableCell>{formatDate(sub.current_period_end)}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="outline" size="sm">
-                        Gestionar
-                      </Button>
+                      {sub.status === "active" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={isCancelling === sub.id}
+                          onClick={() => handleCancel(sub.id)}
+                        >
+                          {isCancelling === sub.id ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            "Cancelar"
+                          )}
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
