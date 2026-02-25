@@ -1,6 +1,16 @@
 # uniklabs.tech
 Dashboard CMS
 
+## ¿Qué desplegar en Vercel?
+
+Solo se despliega el **portal** (la app Next.js en `portal-saas/`). La base de datos sigue en **Neon**; no se “sube” a Vercel.
+
+**Importante:** En Vercel debes configurar **Root Directory** → `portal-saas`. Si dejas `./`, Vercel no reconoce el proyecto porque la app está dentro de esa carpeta.
+
+Guía paso a paso: **[DEPLOYMENT.md](./DEPLOYMENT.md)** (directorio raíz, configuración Vercel, variables de entorno y webhook de Clerk).
+
+---
+
 ## Portal (Next.js + Clerk)
 
 The `portal-saas` app uses Clerk for authentication.

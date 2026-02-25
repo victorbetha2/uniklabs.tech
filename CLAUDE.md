@@ -14,6 +14,7 @@ uniklabs.tech/           ← raíz del repo (Prisma, migraciones, seed)
 ├── package.json         ← dependencias de Prisma (raíz)
 ├── .env                 ← DATABASE_URL (gitignored)
 ├── .env.example         ← plantilla de variables de entorno
+├── DEPLOYMENT.md        ← guía de despliegue en Vercel
 └── portal-saas/         ← app Next.js 16 (front + API)
     ├── app/             ← App Router de Next.js
     │   ├── (marketing)/ ← rutas públicas de marketing
@@ -144,3 +145,10 @@ Usar esta importación en todos los Server Components, Route Handlers y Server A
 - Clases de Tailwind con `cn()` de `@/lib/utils` cuando haya condicionales.
 - No usar `toast` (deprecated en shadcn); usar `sonner` para notificaciones.
 - Al filtrar apps visibles en la UI: `where: { status: "published" }`.
+
+## Despliegue (Vercel)
+
+- **En Vercel solo se despliega el portal:** `portal-saas/`. Con él se despliegan también la **API** (Route Handlers en `app/api/`: webhooks Clerk/PayPal, suscripciones, etc.); no hay un backend separado. La base de datos sigue en Neon.
+- **Root Directory en Vercel:** debe ser **`portal-saas`**. Si se deja `./`, Vercel no detecta la app porque está dentro de esa carpeta.
+- **Build:** el script `prebuild` en `portal-saas/package.json` ejecuta `npx prisma generate` desde la raíz del repo antes de `next build`; en Vercel se puede usar el comando de build por defecto.
+- **Variables de entorno en Vercel:** `DATABASE_URL`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SECRET`. Ver [DEPLOYMENT.md](./DEPLOYMENT.md) para la guía completa (pasos, webhook de Clerk, etc.).
