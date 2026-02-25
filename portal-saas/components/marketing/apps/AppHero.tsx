@@ -47,45 +47,24 @@ export function AppHero({ app }: AppHeroProps) {
                         <Button asChild size="lg" className="bg-lime-500 hover:bg-lime-600 text-black font-semibold h-12 px-8">
                             <a href={`#pricing-${app.slug}`}>Ver planes</a>
                         </Button>
-                        <Button asChild variant="outline" size="lg" className="border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800 text-white h-12 px-8">
-                            <Link href="/sign-up">Ver demo</Link>
-                        </Button>
+                        {app.slug !== 'ent' && (
+                            <Button asChild variant="outline" size="lg" className="border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800 text-white h-12 px-8">
+                                <Link href="/sign-up">Ver demo</Link>
+                            </Button>
+                        )}
                     </div>
                 </div>
 
-                {/* CSS-based dashboard mockup */}
+                {/* App Screenshot */}
                 <div className="relative max-w-5xl mx-auto">
-                    <div className="absolute inset-0 bg-lime-500/20 blur-[120px] rounded-full -z-10" />
-                    <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 p-4 rounded-2xl shadow-2xl relative overflow-hidden">
-                        <div className="grid grid-cols-12 gap-4 h-[400px]">
-                            <div className="col-span-3 border-r border-zinc-800/50 pr-4 hidden md:block">
-                                <div className="space-y-4">
-                                    <div className="h-4 w-3/4 bg-zinc-800 rounded animate-pulse" />
-                                    <div className="h-10 w-full bg-lime-500/10 rounded border border-lime-500/20" />
-                                    <div className="h-4 w-1/2 bg-zinc-800 rounded animate-pulse" />
-                                    <div className="h-4 w-2/3 bg-zinc-800 rounded animate-pulse" />
-                                </div>
-                            </div>
-                            <div className="col-span-12 md:col-span-9 space-y-6">
-                                <div className="flex justify-between items-center pb-4 border-b border-zinc-800/50">
-                                    <div className="h-6 w-32 bg-zinc-800 rounded" />
-                                    <div className="h-8 w-8 bg-zinc-800 rounded-full" />
-                                </div>
-                                <div className="grid grid-cols-3 gap-4">
-                                    <div className="h-24 bg-zinc-800/50 rounded-xl border border-zinc-800" />
-                                    <div className="h-24 bg-zinc-800/50 rounded-xl border border-zinc-800" />
-                                    <div className="h-24 bg-zinc-800/50 rounded-xl border border-zinc-800" />
-                                </div>
-                                <div className="h-48 bg-zinc-800/30 rounded-xl border border-zinc-800 p-4 relative">
-                                    <div className="absolute inset-x-0 bottom-0 top-1/2 flex items-end justify-around px-8 opacity-20">
-                                        <div className="w-8 bg-lime-500 h-[50%] rounded-t" />
-                                        <div className="w-8 bg-lime-500 h-[75%] rounded-t" />
-                                        <div className="w-8 bg-lime-500 h-[66%] rounded-t" />
-                                        <div className="w-8 bg-lime-500 h-[100%] rounded-t" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div className="absolute inset-x-0 -top-40 h-[500px] bg-lime-500/10 blur-[120px] rounded-full -z-10" />
+                    <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 p-2 rounded-2xl shadow-2xl relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-10" />
+                        <img
+                            src={`/images/apps/${app.slug}/dashboard-desktop.png`}
+                            alt={`${app.name} Dashboard`}
+                            className="w-full h-auto rounded-xl border border-zinc-800/50 shadow-inner"
+                        />
                     </div>
                 </div>
             </div>

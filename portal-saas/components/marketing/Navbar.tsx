@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 export default function Navbar() {
   return (
@@ -30,12 +31,20 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="hidden sm:inline-flex border-zinc-700 text-white hover:bg-zinc-800 hover:text-lime-400">
-            <Link href="/sign-in">Iniciar sesión</Link>
-          </Button>
-          <Button className="bg-lime-500 text-black font-bold hover:bg-lime-400 transition-all shadow-[0_0_15px_rgba(132,204,22,0.3)]">
-            <Link href="/sign-up">Empezar ahora</Link>
-          </Button>
+          <SignedOut>
+            <Button variant="outline" className="hidden sm:inline-flex border-zinc-700 text-white hover:bg-zinc-800 hover:text-lime-400">
+              <Link href="/sign-in">Iniciar sesión</Link>
+            </Button>
+            <Button className="bg-lime-500 text-black font-bold hover:bg-lime-400 transition-all shadow-[0_0_15px_rgba(132,204,22,0.3)]">
+              <Link href="/sign-up">Empezar ahora</Link>
+            </Button>
+          </SignedOut>
+          <SignedIn>
+            <Button variant="outline" className="hidden sm:inline-flex border-zinc-700 text-white hover:bg-zinc-800 hover:text-lime-400 text-sm h-9 px-4">
+              <Link href="/dashboard">Dashboard</Link>
+            </Button>
+            <UserButton afterSignOutUrl="/" />
+          </SignedIn>
         </div>
       </div>
     </nav>

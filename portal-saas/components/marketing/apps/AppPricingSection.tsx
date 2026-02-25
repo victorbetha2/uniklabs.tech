@@ -42,7 +42,7 @@ export function AppPricingSection({ appName, appSlug, plans }: AppPricingSection
                             isHighlighted={plan.isHighlighted}
                             features={plan.features as { text: string; included: boolean }[]}
                             ctaLabel={`Empezar con ${plan.name}`}
-                            ctaHref={`/sign-up?plan=${appSlug}-${plan.name.toLowerCase()}`}
+                            ctaHref={`/dashboard/checkout?app=${appSlug}&plan=${plan.name.toLowerCase()}`}
                         />
                     ))}
                 </div>

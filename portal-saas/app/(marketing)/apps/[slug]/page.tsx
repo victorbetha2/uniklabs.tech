@@ -51,11 +51,18 @@ export default async function AppPage({ params }: PageProps) {
                 slug: app.slug
             }} />
 
-            <AppStats stats={app.stats as any} />
+            {app.slug !== 'ent' && <AppStats stats={app.stats as any} />}
 
             <AppFeatures appName={app.name} features={app.features} />
 
-            <AppPricingSection appName={app.name} appSlug={app.slug} plans={app.plans} />
+            <AppPricingSection
+                appName={app.name}
+                appSlug={app.slug}
+                plans={app.plans.map(p => ({
+                    ...p,
+                    price: Number(p.price)
+                }))}
+            />
 
             <AppFAQ appName={app.name} faqs={app.faqs} />
 
