@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, TrendingUp, ArrowRight, Loader2 } from "lucide-react";
+import { Building2, TrendingUp, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,16 +40,28 @@ const apps: App[] = [
     available: true,
     plans: [
       {
-        id: "basic",
-        label: "Basic",
+        id: "starter",
+        label: "Starter",
         price: "$29/mes",
-        description: "Para equipos pequeños. Reportes y dashboard básico.",
+        description: "Perfecto para equipos pequeños que están empezando.",
       },
       {
-        id: "pro",
-        label: "Pro",
-        price: "$59/mes",
-        description: "Sin límite de usuarios. Reportes avanzados y soporte.",
+        id: "team",
+        label: "Team",
+        price: "$69/mes",
+        description: "Para equipos en crecimiento que necesitan más control.",
+      },
+      {
+        id: "business",
+        label: "Business",
+        price: "$109/mes",
+        description: "Potencia total para empresas con operaciones complejas.",
+      },
+      {
+        id: "enterprise",
+        label: "Enterprise",
+        price: "$249/mes",
+        description: "Solución a medida para grandes corporaciones.",
       },
     ],
   },
@@ -82,6 +95,27 @@ export default function AppsPage() {
   const [selectedApp, setSelectedApp] = useState<App | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [subscribedAppIds, setSubscribedAppIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    async function fetchSubscriptions() {
+      try {
+        const res = await fetch("/api/subscriptions");
+        if (!res.ok) return;
+        const data = await res.json();
+        // Extract IDs of apps with active or pending subscriptions
+        const ids = new Set<string>(
+          data.subscriptions
+            .filter((s: any) => s.status === "active" || s.status === "pending")
+            .map((s: any) => s.app.slug)
+        );
+        setSubscribedAppIds(ids);
+      } catch (err) {
+        console.error("Failed to fetch subscriptions", err);
+      }
+    }
+    fetchSubscriptions();
+  }, []);
 
   function openDialog(app: App) {
     setSelectedApp(app);
@@ -131,22 +165,23 @@ export default function AppsPage() {
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {apps.map((app) => {
           const Icon = app.icon;
+          const isSubscribed = subscribedAppIds.has(app.id);
+
           return (
             <Card
               key={app.id}
-              className={`transition-all duration-200 ${
-                app.available
-                  ? "hover:shadow-md hover:border-primary/30"
-                  : "opacity-60"
-              }`}
+              className={`transition-all duration-200 ${app.available
+                ? "hover:shadow-md hover:border-primary/30"
+                : "opacity-60"
+                }`}
             >
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="p-2.5 rounded-xl bg-muted">
                     <Icon className="h-6 w-6" />
                   </div>
-                  <Badge variant={app.available ? "default" : "secondary"}>
-                    {app.status}
+                  <Badge variant={isSubscribed ? "outline" : app.available ? "default" : "secondary"}>
+                    {isSubscribed ? "Suscrito" : app.status}
                   </Badge>
                 </div>
                 <h3 className="font-semibold text-lg mb-1">{app.name}</h3>
@@ -164,10 +199,21 @@ export default function AppsPage() {
                   ))}
                 </div>
                 {app.available && (
-                  <Button className="w-full" onClick={() => openDialog(app)}>
-                    Suscribirse
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
+                  <>
+                    {isSubscribed ? (
+                      <Button className="w-full" variant="secondary" asChild>
+                        <Link href="/dashboard/subscriptions">
+                          Gestionar suscripción
+                          <CheckCircle2 className="ml-2 h-4 w-4 text-primary" />
+                        </Link>
+                      </Button>
+                    ) : (
+                      <Button className="w-full" onClick={() => openDialog(app)}>
+                        Suscribirse
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>
@@ -190,11 +236,10 @@ export default function AppsPage() {
               <button
                 key={plan.id}
                 onClick={() => setSelectedPlan(plan)}
-                className={`w-full text-left rounded-lg border p-4 transition-all ${
-                  selectedPlan?.id === plan.id
-                    ? "border-primary bg-primary/5 ring-1 ring-primary"
-                    : "border-border hover:border-primary/50"
-                }`}
+                className={`w-full text-left rounded-lg border p-4 transition-all ${selectedPlan?.id === plan.id
+                  ? "border-primary bg-primary/5 ring-1 ring-primary"
+                  : "border-border hover:border-primary/50"
+                  }`}
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-semibold">{plan.label}</span>

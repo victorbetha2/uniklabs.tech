@@ -23,6 +23,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
 type Subscription = {
   id: string;
   status: string;
@@ -67,6 +76,7 @@ export default function SubscriptionsPage() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCancelling, setIsCancelling] = useState<string | null>(null);
+  const [subToCancel, setSubToCancel] = useState<Subscription | null>(null);
 
   useEffect(() => {
     const success = searchParams.get("success");
@@ -101,8 +111,11 @@ export default function SubscriptionsPage() {
     void fetchSubscriptions();
   }, []);
 
-  async function handleCancel(subscriptionId: string) {
+  async function handleCancel() {
+    if (!subToCancel) return;
+    const subscriptionId = subToCancel.id;
     setIsCancelling(subscriptionId);
+    setSubToCancel(null);
     try {
       const res = await fetch("/api/subscriptions/cancel", {
         method: "POST",
@@ -186,12 +199,12 @@ export default function SubscriptionsPage() {
                     <TableCell>{formatDate(sub.started_at)}</TableCell>
                     <TableCell>{formatDate(sub.current_period_end)}</TableCell>
                     <TableCell className="text-right">
-                      {sub.status === "active" && (
+                      {(sub.status === "active" || sub.status === "pending") && (
                         <Button
                           variant="outline"
                           size="sm"
                           disabled={isCancelling === sub.id}
-                          onClick={() => handleCancel(sub.id)}
+                          onClick={() => setSubToCancel(sub)}
                         >
                           {isCancelling === sub.id ? (
                             <Loader2 className="h-3 w-3 animate-spin" />
@@ -208,6 +221,26 @@ export default function SubscriptionsPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!subToCancel} onOpenChange={(open) => !open && setSubToCancel(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>¿Confirmar cancelación?</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas cancelar tu suscripción a{" "}
+              <strong>{subToCancel?.app.name}</strong>? Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 sm:gap-0 mt-4">
+            <Button variant="outline" onClick={() => setSubToCancel(null)}>
+              No, mantener
+            </Button>
+            <Button variant="destructive" onClick={handleCancel}>
+              Sí, cancelar suscripción
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

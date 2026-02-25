@@ -17,7 +17,6 @@ const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Overview", exact: true },
   { href: "/dashboard/apps", icon: Grid, label: "Mis Apps", exact: false },
   { href: "/dashboard/subscriptions", icon: CreditCard, label: "Suscripciones", exact: false },
-  { href: "/dashboard/billing", icon: Receipt, label: "Billing", exact: false },
   { href: "/dashboard/settings", icon: Settings, label: "Configuración", exact: false },
 ];
 

@@ -26,44 +26,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-// Mock data – replace with real DB queries when ready
-const mockStats = [
-  {
-    label: "Apps activas",
-    value: "2",
-    icon: Grid,
-    description: "ENT y próximamente Finaly",
-  },
-  {
-    label: "Suscripciones activas",
-    value: "1",
-    icon: CreditCard,
-    description: "Plan Team en ENT",
-  },
-  {
-    label: "Próximo pago",
-    value: "15 Mar 2025",
-    icon: Calendar,
-    description: "Renovación automática",
-  },
-  {
-    label: "Total gastado",
-    value: "$29.00",
-    icon: DollarSign,
-    description: "Mes actual",
-  },
-];
-
-const mockSubscriptions = [
-  {
-    id: "1",
-    app: "ENT",
-    plan: "Team",
-    status: "active" as const,
-    nextPayment: "15 Mar 2025",
-  },
-];
+import { getCurrentDbUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 const availableApps = [
   {
@@ -113,9 +77,61 @@ function getGreeting() {
 }
 
 export default async function DashboardPage() {
-  const user = await currentUser();
+  const clerkUser = await currentUser();
+  const dbUser = await getCurrentDbUser();
   const greeting = getGreeting();
-  const displayName = user?.firstName ?? user?.emailAddresses?.[0]?.emailAddress ?? "usuario";
+  const displayName = clerkUser?.firstName ?? clerkUser?.emailAddresses?.[0]?.emailAddress ?? "usuario";
+
+  // Fetch real data from DB
+  const subscriptions = dbUser
+    ? await prisma.subscription.findMany({
+      where: { user_id: dbUser.id },
+      include: { app: true },
+      orderBy: { created_at: "desc" },
+    })
+    : [];
+
+  const payments = dbUser
+    ? await prisma.paymentHistory.findMany({
+      where: {
+        subscription: { user_id: dbUser.id },
+        status: "completed",
+      },
+    })
+    : [];
+
+  const totalSpent = payments.reduce((acc, p) => acc + Number(p.amount), 0);
+  const activeSubs = subscriptions.filter((s) => s.status === "active");
+  const nextPayment = activeSubs.length > 0
+    ? activeSubs[0].current_period_end?.toLocaleDateString("es-ES", { day: 'numeric', month: 'short', year: 'numeric' })
+    : "N/A";
+
+  const stats = [
+    {
+      label: "Apps activas",
+      value: activeSubs.length.toString(),
+      icon: Grid,
+      description: activeSubs.length > 0 ? activeSubs.map(s => s.app.name).join(", ") : "Sin apps activas",
+    },
+    {
+      label: "Suscripciones totales",
+      value: subscriptions.length.toString(),
+      icon: CreditCard,
+      description: "Todas tus suscripciones",
+    },
+    {
+      label: "Próximo pago",
+      value: nextPayment ?? "---",
+      icon: Calendar,
+      description: activeSubs.length > 0 ? "Renovación automática" : "Sin pagos pendientes",
+    },
+    {
+      label: "Total gastado",
+      value: `$${totalSpent.toFixed(2)}`,
+      icon: DollarSign,
+      description: "Histórico total",
+    },
+  ];
 
   return (
     <div className="space-y-8">
@@ -131,7 +147,7 @@ export default async function DashboardPage() {
 
       {/* Stats cards */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        {mockStats.map(({ label, value, icon: Icon, description }) => (
+        {stats.map(({ label, value, icon: Icon, description }) => (
           <Card key={label}>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
@@ -158,7 +174,7 @@ export default async function DashboardPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {mockSubscriptions.length === 0 ? (
+          {subscriptions.length === 0 ? (
             <div className="py-8 text-center text-muted-foreground">
               No tienes suscripciones activas.{" "}
               <Link href="/dashboard/apps" className="underline">
@@ -177,16 +193,18 @@ export default async function DashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockSubscriptions.map((sub) => (
+                {subscriptions.map((sub) => (
                   <TableRow key={sub.id}>
-                    <TableCell className="font-medium">{sub.app}</TableCell>
-                    <TableCell>{sub.plan}</TableCell>
+                    <TableCell className="font-medium">{sub.app.name}</TableCell>
+                    <TableCell className="capitalize">{sub.plan}</TableCell>
                     <TableCell>
                       <Badge variant={statusVariantMap[sub.status] ?? "secondary"}>
                         {statusLabelMap[sub.status] ?? sub.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{sub.nextPayment}</TableCell>
+                    <TableCell>
+                      {sub.current_period_end?.toLocaleDateString("es-ES") ?? "---"}
+                    </TableCell>
                     <TableCell className="text-right">
                       <Button variant="outline" size="sm" asChild>
                         <Link href="/dashboard/subscriptions">Gestionar</Link>
@@ -209,11 +227,10 @@ export default async function DashboardPage() {
             return (
               <Card
                 key={app.id}
-                className={`relative overflow-hidden transition-all duration-200 ${
-                  app.available
+                className={`relative overflow-hidden transition-all duration-200 ${app.available
                     ? "hover:shadow-md hover:border-primary/30 cursor-pointer"
                     : "opacity-60"
-                }`}
+                  }`}
               >
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
