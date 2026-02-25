@@ -29,3 +29,7 @@ The route `POST /api/webhooks/clerk` verifies the request with Svix and creates/
    - `npx prisma migrate dev --name init` — create tables
    - `npx prisma db seed` — seed apps Finaly and ENT (optional)
    - `npx prisma studio` — open Prisma Studio
+
+### Si el portal falla con "Can't resolve 'tailwindcss'"
+
+Next.js usa como raíz del proyecto la carpeta donde encuentra un `package-lock.json`. En este repo el lockfile de la raíz está renombrado a `package-lock.json.root` para que Next use solo el de `portal-saas`. Si en la raíz vuelves a hacer `npm install` y se genera un nuevo `package-lock.json`, renómbralo a `package-lock.json.root` para que el portal arranque bien.

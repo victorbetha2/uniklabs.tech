@@ -53,73 +53,77 @@ export default function AppsShowcase() {
 
                 {/* Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {apps.map((app) => (
-                        <div
-                            key={app.id}
-                            className={cn(
-                                "group relative rounded-3xl border border-zinc-800 bg-zinc-900 overflow-hidden transition-all duration-300",
-                                app.available
-                                    ? "hover:border-lime-500/30 hover:scale-[1.02] cursor-pointer"
-                                    : "opacity-60 cursor-default"
-                            )}
-                        >
-                            {/* Glow Effect */}
-                            {app.available && (
-                                <div className="absolute inset-0 z-0 bg-gradient-to-br from-lime-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                            )}
-
-                            <div className="relative z-10 p-8 flex flex-col h-full">
-                                {/* Icon & Badge */}
-                                <div className="flex items-center justify-between mb-8">
-                                    <div className={cn(
-                                        "p-3 rounded-2xl bg-zinc-800/50",
-                                        app.available ? "text-lime-500" : "text-gray-600"
-                                    )}>
-                                        <app.icon size={32} />
-                                    </div>
-                                    <span className={cn(
-                                        "text-xs font-bold px-3 py-1 rounded-full border tracking-wide uppercase",
+                    {apps.map((app) => {
+                        const CardWrapper = app.available ? Link : "div";
+                        const wrapperProps = app.available
+                            ? { href: app.link, className: "block h-full" }
+                            : { className: "block h-full" };
+                        return (
+                            <CardWrapper key={app.id} {...wrapperProps}>
+                                <div
+                                    className={cn(
+                                        "group relative rounded-3xl border border-zinc-800 bg-zinc-900 overflow-hidden transition-all duration-300 h-full flex flex-col",
                                         app.available
-                                            ? "bg-lime-500/10 text-lime-400 border-lime-500/30"
-                                            : "bg-zinc-800 text-gray-500 border-zinc-700"
-                                    )}>
-                                        {app.status}
-                                    </span>
+                                            ? "hover:border-lime-500/30 hover:scale-[1.02] cursor-pointer"
+                                            : "opacity-60 cursor-default"
+                                    )}
+                                >
+                                    {/* Glow Effect */}
+                                    {app.available && (
+                                        <div className="absolute inset-0 z-0 bg-gradient-to-br from-lime-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    )}
+
+                                    <div className="relative z-10 p-8 flex flex-col h-full">
+                                        {/* Icon & Badge */}
+                                        <div className="flex items-center justify-between mb-8">
+                                            <div className={cn(
+                                                "p-3 rounded-2xl bg-zinc-800/50",
+                                                app.available ? "text-lime-500" : "text-gray-600"
+                                            )}>
+                                                <app.icon size={32} />
+                                            </div>
+                                            <span className={cn(
+                                                "text-xs font-bold px-3 py-1 rounded-full border tracking-wide uppercase",
+                                                app.available
+                                                    ? "bg-lime-500/10 text-lime-400 border-lime-500/30"
+                                                    : "bg-zinc-800 text-gray-500 border-zinc-700"
+                                            )}>
+                                                {app.status}
+                                            </span>
+                                        </div>
+
+                                        {/* Content */}
+                                        <h3 className="text-2xl font-bold text-white mb-3 tracking-tight">
+                                            {app.name}
+                                        </h3>
+                                        <p className="text-gray-400 text-sm leading-relaxed mb-6 flex-grow">
+                                            {app.description}
+                                        </p>
+
+                                        {/* Tags */}
+                                        <div className="flex flex-wrap gap-2 mb-8">
+                                            {app.tags.map((tag) => (
+                                                <span
+                                                    key={tag}
+                                                    className="text-[10px] font-medium px-2.5 py-1 rounded-lg bg-zinc-800 text-gray-400 border border-zinc-700/50"
+                                                >
+                                                    {tag}
+                                                </span>
+                                            ))}
+                                        </div>
+
+                                        {/* CTA visual (click is on the whole card when available) */}
+                                        {app.available && (
+                                            <span className="inline-flex items-center gap-2 text-sm font-bold text-lime-400 group-hover:text-lime-300 transition-colors">
+                                                Ver planes
+                                                <ArrowRight className="h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
-
-                                {/* Content */}
-                                <h3 className="text-2xl font-bold text-white mb-3 tracking-tight">
-                                    {app.name}
-                                </h3>
-                                <p className="text-gray-400 text-sm leading-relaxed mb-6 flex-grow">
-                                    {app.description}
-                                </p>
-
-                                {/* Tags */}
-                                <div className="flex flex-wrap gap-2 mb-8">
-                                    {app.tags.map((tag) => (
-                                        <span
-                                            key={tag}
-                                            className="text-[10px] font-medium px-2.5 py-1 rounded-lg bg-zinc-800 text-gray-400 border border-zinc-700/50"
-                                        >
-                                            {tag}
-                                        </span>
-                                    ))}
-                                </div>
-
-                                {/* Link */}
-                                {app.available && (
-                                    <Link
-                                        href={app.link}
-                                        className="inline-flex items-center gap-2 text-sm font-bold text-lime-400 hover:text-lime-300 transition-colors group/link"
-                                    >
-                                        Ver planes
-                                        <ArrowRight className="h-4 w-4 transform group-hover/link:translate-x-1 transition-transform" />
-                                    </Link>
-                                )}
-                            </div>
-                        </div>
-                    ))}
+                            </CardWrapper>
+                        );
+                    })}
                 </div>
             </div>
         </section>
