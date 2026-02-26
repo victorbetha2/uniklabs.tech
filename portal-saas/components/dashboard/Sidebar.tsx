@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -64,9 +65,15 @@ export function Sidebar({ onLinkClick }: SidebarProps) {
         <Link
           href="/dashboard"
           onClick={onLinkClick}
-          className="flex items-center gap-2"
+          className="flex items-center"
         >
-          <span className="text-xl font-black tracking-tight">UnikLabs</span>
+          <Image
+            src="/images/LOGO.png"
+            alt="UnikLabs"
+            width={120}
+            height={34}
+            className="h-7 w-auto"
+          />
         </Link>
       </div>
 

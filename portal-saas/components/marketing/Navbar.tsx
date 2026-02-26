@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Zap } from "lucide-react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
@@ -11,10 +11,13 @@ export default function Navbar() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-2">
           <Link href="/" className="flex items-center gap-2 group">
-            <Zap className="h-6 w-6 text-lime-500 fill-lime-500/20 group-hover:scale-110 transition-transform" />
-            <span className="text-xl font-bold text-white tracking-tight">
-              UnikLabs
-            </span>
+            <Image
+              src="/images/LOGO.png"
+              alt="UnikLabs"
+              width={140}
+              height={40}
+              className="h-8 w-auto group-hover:opacity-90 transition-opacity"
+            />
           </Link>
         </div>
 

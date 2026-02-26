@@ -17,6 +17,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "UnikLabs - Ecosistema Digital Empresarial",
   description: "Plataforma SaaS unificada para la gestión empresarial y productividad digital.",
+  icons: {
+    icon: "/images/ICON.png",
+    apple: "/images/ICON.png",
+  },
 };
 
 export default function RootLayout({

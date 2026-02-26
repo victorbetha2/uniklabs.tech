@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Zap } from "lucide-react";
+import Image from "next/image";
 
 export default function Footer() {
     return (
@@ -10,12 +10,15 @@ export default function Footer() {
                 <div className="flex flex-col md:flex-row items-center justify-between gap-8">
                     {/* Logo & Copyright */}
                     <div className="flex flex-col items-center md:items-start gap-4">
-                        <div className="flex items-center gap-2">
-                            <Zap className="h-6 w-6 text-lime-500 fill-lime-500/20" />
-                            <span className="text-xl font-bold text-white tracking-tight">
-                                UnikLabs
-                            </span>
-                        </div>
+                        <Link href="/" className="flex items-center">
+                            <Image
+                                src="/images/LOGO.png"
+                                alt="UnikLabs"
+                                width={140}
+                                height={40}
+                                className="h-8 w-auto"
+                            />
+                        </Link>
                         <p className="text-gray-500 text-sm">
                             © {new Date().getFullYear()} UnikLabs. Todos los derechos reservados.
                         </p>
