@@ -106,6 +106,25 @@ Para que los usuarios de Clerk se creen/actualicen en la base de datos:
 
 Tras el primer despliegue, sustituye `<tu-dominio-vercel>` por la URL real que te asigne Vercel.
 
+### 7. Webhook de PayPal (activar suscripciones y cobros)
+
+Para que las suscripciones pasen de **pending** a **active** cuando el usuario aprueba el pago en PayPal, y para registrar cancelaciones y el historial de cobros:
+
+1. Ve al [PayPal Developer Portal](https://developer.paypal.com/dashboard/applications).
+2. Selecciona tu app y cambia a **Live** (producción) o **Sandbox** (pruebas). Debe coincidir con las credenciales que usas en Vercel (`PAYPAL_SANDBOX`).
+3. Entra en **Webhooks** (en el menú de la app) y pulsa **Add Webhook**.
+4. **Webhook URL:**  
+   `https://<tu-dominio-vercel>.vercel.app/api/webhooks/paypal`  
+   (o tu dominio custom, por ejemplo `https://uniklabs.tech/api/webhooks/paypal`).
+5. **Eventos a suscribir:** marca al menos:
+   - **`BILLING.SUBSCRIPTION.ACTIVATED`** — cuando el usuario aprueba en PayPal; la app actualiza la suscripción a `active`.
+   - **`BILLING.SUBSCRIPTION.CANCELLED`** — cancelación.
+   - **`BILLING.SUBSCRIPTION.EXPIRED`** — fin del plan.
+   - **`PAYMENT.SALE.COMPLETED`** — cada cobro recurrente; se guarda en el historial de pagos.
+6. Guarda el webhook y copia el **Webhook ID**. Añádelo en Vercel como variable **`PAYPAL_WEBHOOK_ID`**.
+
+Si el webhook no está configurado o la URL es incorrecta, las suscripciones se quedarán en **pending** aunque el pago se haya procesado en PayPal.
+
 ---
 
 ## Resumen de configuración en Vercel
@@ -153,3 +172,4 @@ Sí. Ese directorio contiene solo **código generado** (tipos TypeScript y el cl
 - **Root Directory en Vercel:** `portal-saas`.
 - **Base de datos:** Neon; configurar `DATABASE_URL` en Vercel.
 - **Clerk:** configurar las 3 variables y el webhook con la URL de tu app en Vercel.
+- **PayPal:** configurar `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_SANDBOX`, `PAYPAL_WEBHOOK_ID` y los planes; y crear el webhook en PayPal con la URL `/api/webhooks/paypal` para que las suscripciones pasen a **active** y se registren los cobros.
