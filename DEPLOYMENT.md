@@ -83,8 +83,15 @@ En el proyecto de Vercel: **Settings → Environment Variables**. Añade estas v
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clave pública de Clerk | [Clerk Dashboard](https://dashboard.clerk.com) → API Keys |
 | `CLERK_SECRET_KEY` | Clave secreta de Clerk | Mismo sitio |
 | `CLERK_WEBHOOK_SECRET` | Secreto para firmar el webhook de Clerk | Clerk → Webhooks → tu endpoint → Signing Secret |
+| `PAYPAL_CLIENT_ID` | Client ID de la app PayPal | [PayPal Developer](https://developer.paypal.com/dashboard/applications) → **Live** (producción) o Sandbox (pruebas) |
+| `PAYPAL_SECRET` | Client Secret de la app PayPal | Mismo sitio que el Client ID |
+| `PAYPAL_SANDBOX` | Si es `"false"` se usa la API **Live**; cualquier otro valor usa Sandbox | Opcional. En producción real pon `PAYPAL_SANDBOX=false` y usa credenciales **Live** |
+| `PAYPAL_WEBHOOK_ID` | ID del webhook de PayPal | PayPal Developer → Webhooks → tu endpoint → Webhook ID |
+| `PAYPAL_PLAN_ENT_*` | IDs de planes (Starter, Team, etc.) | PayPal → Productos/Planes de suscripción. Deben ser del mismo entorno (Live o Sandbox) que las credenciales |
 
-Sin `DATABASE_URL` el portal no puede conectar con Neon. Sin las variables de Clerk, la autenticación y el webhook no funcionarán.
+**PayPal en producción:** En Vercel, para cobros reales debes usar la app en modo **Live**: en [developer.paypal.com](https://developer.paypal.com/dashboard/applications) cambia a **Live**, copia Client ID y Secret de esa app, y en Vercel define `PAYPAL_SANDBOX=false` y esas credenciales. Los IDs de planes (`PAYPAL_PLAN_ENT_STARTER`, etc.) deben ser los de los planes creados en **Live**, no los del Sandbox.
+
+Sin `DATABASE_URL` el portal no puede conectar con Neon. Sin las variables de Clerk, la autenticación y el webhook no funcionarán. Sin las de PayPal, la suscripción y el flujo de pago fallarán (error "Client Authentication failed" si usas credenciales Sandbox contra la API Live).
 
 ### 6. Webhook de Clerk (sincronizar usuarios con Neon)
 
@@ -108,7 +115,7 @@ Tras el primer despliegue, sustituye `<tu-dominio-vercel>` por la URL real que t
 | **Root Directory** | `portal-saas` |
 | **Framework Preset** | Next.js |
 | **Build Command** | `npm run build` (el `prebuild` genera Prisma antes) |
-| **Environment Variables** | `DATABASE_URL`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SECRET` |
+| **Environment Variables** | `DATABASE_URL`, Clerk (`NEXT_PUBLIC_CLERK_*`, `CLERK_*`), PayPal (`PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_SANDBOX`, `PAYPAL_WEBHOOK_ID`, `PAYPAL_PLAN_*`) |
 
 ---
 

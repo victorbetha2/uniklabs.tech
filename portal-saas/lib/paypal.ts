@@ -1,7 +1,8 @@
 export function getPayPalBaseUrl(): string {
-  return process.env.NODE_ENV === "production"
-    ? "https://api-m.paypal.com"
-    : "https://api-m.sandbox.paypal.com";
+  const useSandbox = process.env.PAYPAL_SANDBOX !== "false";
+  return useSandbox
+    ? "https://api-m.sandbox.paypal.com"
+    : "https://api-m.paypal.com";
 }
 
 export async function getPayPalAccessToken(): Promise<string> {

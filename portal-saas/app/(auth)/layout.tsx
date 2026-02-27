@@ -16,6 +16,7 @@ export default function AuthLayout({
             width={160}
             height={46}
             className="h-10 w-auto"
+            style={{ filter: 'brightness(0) invert(1)' }}
           />
         </Link>
       </div>

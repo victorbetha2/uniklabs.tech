@@ -17,6 +17,7 @@ export default function Footer() {
                                 width={140}
                                 height={40}
                                 className="h-8 w-auto"
+                                style={{ filter: 'brightness(0) invert(1)' }}
                             />
                         </Link>
                         <p className="text-gray-500 text-sm">

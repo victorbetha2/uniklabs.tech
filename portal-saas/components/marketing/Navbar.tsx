@@ -17,6 +17,7 @@ export default function Navbar() {
               width={140}
               height={40}
               className="h-8 w-auto group-hover:opacity-90 transition-opacity"
+              style={{ filter: 'brightness(0) invert(1)' }}
             />
           </Link>
         </div>

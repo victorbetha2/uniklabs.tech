@@ -73,6 +73,7 @@ export function Sidebar({ onLinkClick }: SidebarProps) {
             width={120}
             height={34}
             className="h-7 w-auto"
+            style={{ filter: 'brightness(0) invert(1)' }}
           />
         </Link>
       </div>
