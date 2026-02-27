@@ -88,6 +88,8 @@ En el proyecto de Vercel: **Settings → Environment Variables**. Añade estas v
 | `PAYPAL_SANDBOX` | Si es `"false"` se usa la API **Live**; cualquier otro valor usa Sandbox | Opcional. En producción real pon `PAYPAL_SANDBOX=false` y usa credenciales **Live** |
 | `PAYPAL_WEBHOOK_ID` | ID del webhook de PayPal | PayPal Developer → Webhooks → tu endpoint → Webhook ID |
 | `PAYPAL_PLAN_ENT_*` | IDs de planes (Starter, Team, etc.) | PayPal → Productos/Planes de suscripción. Deben ser del mismo entorno (Live o Sandbox) que las credenciales |
+| `ENT_REPORTE_API_URL` | URL base de la API ENT Reporte (sin barra final) | Proporcionada por el equipo ENT Reporte. Ej: `https://ent-reporte.example.com` |
+| `ENT_REPORTE_API_TOKEN` | Token Bearer para la API externa ENT Reporte | Proporcionado por el equipo ENT Reporte. **Secreto:** usar Vercel Secrets; nunca en logs ni respuestas al cliente. |
 
 **PayPal en producción:** En Vercel, para cobros reales debes usar la app en modo **Live**: en [developer.paypal.com](https://developer.paypal.com/dashboard/applications) cambia a **Live**, copia Client ID y Secret de esa app, y en Vercel define `PAYPAL_SANDBOX=false` y esas credenciales. Los IDs de planes (`PAYPAL_PLAN_ENT_STARTER`, etc.) deben ser los de los planes creados en **Live**, no los del Sandbox.
 
@@ -134,7 +136,7 @@ Si el webhook no está configurado o la URL es incorrecta, las suscripciones se 
 | **Root Directory** | `portal-saas` |
 | **Framework Preset** | Next.js |
 | **Build Command** | `npm run build` (el `prebuild` genera Prisma antes) |
-| **Environment Variables** | `DATABASE_URL`, Clerk (`NEXT_PUBLIC_CLERK_*`, `CLERK_*`), PayPal (`PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_SANDBOX`, `PAYPAL_WEBHOOK_ID`, `PAYPAL_PLAN_*`) |
+| **Environment Variables** | `DATABASE_URL`, Clerk (`NEXT_PUBLIC_CLERK_*`, `CLERK_*`), PayPal (`PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_SANDBOX`, `PAYPAL_WEBHOOK_ID`, `PAYPAL_PLAN_*`), ENT Reporte (`ENT_REPORTE_API_URL`, `ENT_REPORTE_API_TOKEN`) |
 
 ---
 

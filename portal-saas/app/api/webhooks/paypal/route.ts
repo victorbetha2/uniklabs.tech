@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getPayPalBaseUrl } from "@/lib/paypal";
+import { provisionAdmin } from "@/lib/ent-reporte";
 
 type PayPalWebhookEvent = {
   event_type: string;
@@ -81,10 +82,40 @@ export async function POST(req: NextRequest) {
       case "BILLING.SUBSCRIPTION.ACTIVATED": {
         const subscriptionId = event.resource?.id;
         if (subscriptionId) {
-          await prisma.subscription.updateMany({
+          const subscription = await prisma.subscription.findFirst({
             where: { paypal_subscription_id: subscriptionId },
-            data: { status: "active" },
+            include: { user: true, app: true },
           });
+          if (subscription) {
+            await prisma.subscription.update({
+              where: { id: subscription.id },
+              data: { status: "active" },
+            });
+            if (subscription.app.slug === "ent") {
+              const name = subscription.user.name?.trim() ?? "";
+              const spaceIndex = name.indexOf(" ");
+              const nombre = spaceIndex >= 0 ? name.slice(0, spaceIndex) : name || "Usuario";
+              const apellido = spaceIndex >= 0 ? name.slice(spaceIndex + 1).trim() : "";
+              void provisionAdmin({
+                email: subscription.user.email,
+                nombre,
+                apellido,
+                membresiaId: subscription.id,
+              }).catch((err) => {
+                const message = err instanceof Error ? err.message : String(err);
+                console.error("[PayPal webhook] ENT Reporte provision failed (non-blocking)", {
+                  membresiaId: subscription.id,
+                  email: subscription.user.email,
+                  message,
+                });
+              });
+            }
+          } else {
+            await prisma.subscription.updateMany({
+              where: { paypal_subscription_id: subscriptionId },
+              data: { status: "active" },
+            });
+          }
         }
         break;
       }
