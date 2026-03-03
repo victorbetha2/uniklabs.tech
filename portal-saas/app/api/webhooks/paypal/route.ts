@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getPayPalBaseUrl } from "@/lib/paypal";
-import { provisionAdmin } from "@/lib/ent-reporte";
+import { provisionAdmin } from "@/lib/report-reporte";
 
 type PayPalWebhookEvent = {
   event_type: string;
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
               where: { id: subscription.id },
               data: { status: "active" },
             });
-            if (subscription.app.slug === "ent") {
+            if (subscription.app.slug === "report") {
               const name = subscription.user.name?.trim() ?? "";
               const spaceIndex = name.indexOf(" ");
               const nombre = spaceIndex >= 0 ? name.slice(0, spaceIndex) : name || "Usuario";
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
                 membresiaId: subscription.id,
               }).catch((err) => {
                 const message = err instanceof Error ? err.message : String(err);
-                console.error("[PayPal webhook] ENT Reporte provision failed (non-blocking)", {
+                console.error("[PayPal webhook] ReporT provision failed (non-blocking)", {
                   membresiaId: subscription.id,
                   email: subscription.user.email,
                   message,

@@ -31,8 +31,8 @@ type App = {
 
 const apps: App[] = [
   {
-    id: "ent",
-    name: "ENT",
+    id: "report",
+    name: "ReporT",
     icon: Building2,
     tagline: "Suite empresarial para reportes y gestión de datos.",
     tags: ["Reportes", "Dashboard", "Multi-usuario"],

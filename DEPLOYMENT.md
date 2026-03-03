@@ -87,11 +87,11 @@ En el proyecto de Vercel: **Settings → Environment Variables**. Añade estas v
 | `PAYPAL_SECRET` | Client Secret de la app PayPal | Mismo sitio que el Client ID |
 | `PAYPAL_SANDBOX` | Si es `"false"` se usa la API **Live**; cualquier otro valor usa Sandbox | Opcional. En producción real pon `PAYPAL_SANDBOX=false` y usa credenciales **Live** |
 | `PAYPAL_WEBHOOK_ID` | ID del webhook de PayPal | PayPal Developer → Webhooks → tu endpoint → Webhook ID |
-| `PAYPAL_PLAN_ENT_*` | IDs de planes (Starter, Team, etc.) | PayPal → Productos/Planes de suscripción. Deben ser del mismo entorno (Live o Sandbox) que las credenciales |
-| `ENT_REPORTE_API_URL` | URL base de la API ENT Reporte (sin barra final) | Proporcionada por el equipo ENT Reporte. Ej: `https://ent-reporte.example.com` |
-| `ENT_REPORTE_API_TOKEN` | Token Bearer para la API externa ENT Reporte | Proporcionado por el equipo ENT Reporte. **Secreto:** usar Vercel Secrets; nunca en logs ni respuestas al cliente. |
+| `PAYPAL_PLAN_REPORT_*` | IDs de planes (Starter, Team, etc.) | PayPal → Productos/Planes de suscripción. Deben ser del mismo entorno (Live o Sandbox) que las credenciales |
+| `REPORTR_API_URL` | URL base de la API ReporT (sin barra final) | Proporcionada por el equipo ReporT. Ej: `https://report-api.example.com` |
+| `REPORTR_API_TOKEN` | Token Bearer para la API externa ReporT | Proporcionado por el equipo ReporT. **Secreto:** usar Vercel Secrets; nunca en logs ni respuestas al cliente. |
 
-**PayPal en producción:** En Vercel, para cobros reales debes usar la app en modo **Live**: en [developer.paypal.com](https://developer.paypal.com/dashboard/applications) cambia a **Live**, copia Client ID y Secret de esa app, y en Vercel define `PAYPAL_SANDBOX=false` y esas credenciales. Los IDs de planes (`PAYPAL_PLAN_ENT_STARTER`, etc.) deben ser los de los planes creados en **Live**, no los del Sandbox.
+**PayPal en producción:** En Vercel, para cobros reales debes usar la app en modo **Live**: en [developer.paypal.com](https://developer.paypal.com/dashboard/applications) cambia a **Live**, copia Client ID y Secret de esa app, y en Vercel define `PAYPAL_SANDBOX=false` y esas credenciales. Los IDs de planes (`PAYPAL_PLAN_REPORT_STARTER`, etc.) deben ser los de los planes creados en **Live**, no los del Sandbox.
 
 Sin `DATABASE_URL` el portal no puede conectar con Neon. Sin las variables de Clerk, la autenticación y el webhook no funcionarán. Sin las de PayPal, la suscripción y el flujo de pago fallarán (error "Client Authentication failed" si usas credenciales Sandbox contra la API Live).
 

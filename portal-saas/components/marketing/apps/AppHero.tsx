@@ -48,7 +48,7 @@ export function AppHero({ app }: AppHeroProps) {
                         <Button asChild size="lg" className="bg-lime-500 hover:bg-lime-600 text-black font-semibold h-12 px-8">
                             <a href={`#pricing-${app.slug}`}>Ver planes</a>
                         </Button>
-                        {app.slug !== 'ent' && (
+                        {app.slug !== 'report' && (
                             <Button asChild variant="outline" size="lg" className="border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800 text-white h-12 px-8">
                                 <Link href="/sign-up">Ver demo</Link>
                             </Button>

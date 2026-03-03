@@ -1,10 +1,10 @@
 /**
- * Integración con la API externa ENT Reporte para provisionar cuentas admin
- * cuando una suscripción a la app ENT queda activa (webhook PayPal BILLING.SUBSCRIPTION.ACTIVATED).
- * El token ENT_REPORTE_API_TOKEN nunca debe aparecer en logs ni respuestas.
+ * Integración con la API externa ReporT para provisionar cuentas admin
+ * cuando una suscripción a la app report queda activa (webhook PayPal BILLING.SUBSCRIPTION.ACTIVATED).
+ * El token REPORTR_API_TOKEN nunca debe aparecer en logs ni respuestas.
  */
 
-const ENT_REPORTE_TIMEOUT_MS = 18_000;
+const REPORTR_API_TIMEOUT_MS = 18_000;
 
 export type ProvisionAdminPayload = {
   email: string;
@@ -15,13 +15,13 @@ export type ProvisionAdminPayload = {
   telefono?: string | null;
 };
 
-type EntReporteSuccessResponse = {
+type ReportApiSuccessResponse = {
   success: true;
   data?: { uid?: string };
   meta?: { membresiaId?: string; passwordResetEmailSent?: boolean };
 };
 
-type EntReporteErrorBody = {
+type ReportApiErrorBody = {
   success?: false;
   error?: string;
   message?: string;
@@ -29,14 +29,14 @@ type EntReporteErrorBody = {
 };
 
 function getConfig(): { url: string; token: string } | null {
-  const url = process.env.ENT_REPORTE_API_URL?.trim();
-  const token = process.env.ENT_REPORTE_API_TOKEN?.trim();
+  const url = process.env.REPORTR_API_URL?.trim();
+  const token = process.env.REPORTR_API_TOKEN?.trim();
   if (!url || !token) return null;
   return { url: url.replace(/\/$/, ""), token };
 }
 
 /**
- * Provisiona un admin en ENT Reporte. No lanza si la URL o el token no están configurados
+ * Provisiona un admin en ReporT. No lanza si la URL o el token no están configurados
  * (solo loguea y retorna). 409 se trata como éxito idempotente (warning). 401 lanza error crítico.
  * Otros errores se registran y se lanza para trazabilidad.
  */
@@ -46,13 +46,13 @@ export async function provisionAdmin(payload: ProvisionAdminPayload): Promise<vo
   const config = getConfig();
   if (!config) {
     console.warn(
-      "[ENT Reporte] ENT_REPORTE_API_URL or ENT_REPORTE_API_TOKEN not set; skipping provision",
+      "[ReporT] REPORTR_API_URL or REPORTR_API_TOKEN not set; skipping provision",
       { membresiaId, email }
     );
     return;
   }
 
-  console.info("[ENT Reporte] Provision attempt", { membresiaId, email });
+  console.info("[ReporT] Provision attempt", { membresiaId, email });
 
   const body: Record<string, string> = {
     email,
@@ -64,7 +64,7 @@ export async function provisionAdmin(payload: ProvisionAdminPayload): Promise<vo
   if (telefono != null && telefono !== "") body.telefono = String(telefono);
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), ENT_REPORTE_TIMEOUT_MS);
+  const timeoutId = setTimeout(() => controller.abort(), REPORTR_API_TIMEOUT_MS);
 
   let res: Response;
   let responseText: string;
@@ -83,12 +83,12 @@ export async function provisionAdmin(payload: ProvisionAdminPayload): Promise<vo
   } catch (err) {
     clearTimeout(timeoutId);
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[ENT Reporte] Request failed", {
+    console.error("[ReporT] Request failed", {
       membresiaId,
       email,
       message,
     });
-    throw new Error(`ENT Reporte provision request failed: ${message}`);
+    throw new Error(`ReporT provision request failed: ${message}`);
   } finally {
     clearTimeout(timeoutId);
   }
@@ -98,26 +98,26 @@ export async function provisionAdmin(payload: ProvisionAdminPayload): Promise<vo
   if (statusCode === 201) {
     let uid: string | undefined;
     try {
-      const json = JSON.parse(responseText) as EntReporteSuccessResponse;
+      const json = JSON.parse(responseText) as ReportApiSuccessResponse;
       uid = json.data?.uid;
     } catch {
       // ignore parse errors for success path
     }
-    console.info("[ENT Reporte] Provision success", { membresiaId, email, uid });
+    console.info("[ReporT] Provision success", { membresiaId, email, uid });
     return;
   }
 
   if (statusCode === 409) {
     console.warn(
-      "[ENT Reporte] Email already exists in ENT Reporte (idempotent ok)",
+      "[ReporT] Email already exists in ReporT (idempotent ok)",
       { membresiaId, email }
     );
     return;
   }
 
-  let responseBody: EntReporteErrorBody | string = responseText;
+  let responseBody: ReportApiErrorBody | string = responseText;
   try {
-    responseBody = JSON.parse(responseText) as EntReporteErrorBody;
+    responseBody = JSON.parse(responseText) as ReportApiErrorBody;
   } catch {
     // keep as string for logging
   }
@@ -128,19 +128,19 @@ export async function provisionAdmin(payload: ProvisionAdminPayload): Promise<vo
       : responseBody;
 
   if (statusCode === 401) {
-    console.error("[ENT Reporte] Unauthorized — invalid or missing token (check ENT_REPORTE_API_TOKEN)", {
+    console.error("[ReporT] Unauthorized — invalid or missing token (check REPORTR_API_TOKEN)", {
       membresiaId,
       email,
       statusCode,
     });
-    throw new Error("ENT Reporte: unauthorized (token invalid or missing)");
+    throw new Error("ReporT: unauthorized (token invalid or missing)");
   }
 
-  console.error("[ENT Reporte] Provision error", {
+  console.error("[ReporT] Provision error", {
     membresiaId,
     email,
     statusCode,
     responseBody: typeof responseBody === "string" ? responseBody : JSON.stringify(responseBody),
   });
-  throw new Error(`ENT Reporte provision failed: ${statusCode} — ${errMessage}`);
+  throw new Error(`ReporT provision failed: ${statusCode} — ${errMessage}`);
 }

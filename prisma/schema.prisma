@@ -21,8 +21,8 @@ model User {
 
 model App {
   id          String   @id @default(cuid())
-  slug        String   @unique  // "ent", "finaly"
-  name        String            // "ENT"
+  slug        String   @unique  // "report", "finaly"
+  name        String            // "ReporT"
   tagline     String            // "Reportes y gestión sin límites"
   description String            // Descripción larga para el hero
   badge       String            // "Suite Empresarial"

@@ -112,7 +112,7 @@ PaymentHistory    ← historial de cobros de una suscripción
 ### Campos relevantes
 
 **App**
-- `id` — slug manual (ej. `"finaly"`, `"ent"`)
+- `id` — slug manual (ej. `"finaly"`, `"report"`)
 - `is_active` — app disponible para suscripción
 - `status` — visibilidad de la página: `"draft"` | `"published"`
 

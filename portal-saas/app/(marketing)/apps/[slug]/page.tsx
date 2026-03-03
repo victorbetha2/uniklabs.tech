@@ -51,7 +51,7 @@ export default async function AppPage({ params }: PageProps) {
                 slug: app.slug
             }} />
 
-            {app.slug !== 'ent' && <AppStats stats={app.stats as any} />}
+            {app.slug !== 'report' && <AppStats stats={app.stats as any} />}
 
             <AppFeatures appName={app.name} features={app.features} />
 

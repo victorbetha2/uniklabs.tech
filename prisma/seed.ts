@@ -12,22 +12,17 @@ const adapter = new PrismaPg(pool)
 const prisma = new PrismaClient({ adapter })
 
 async function main() {
-  // Limpiar datos previos si existen
-  await prisma.appFAQ.deleteMany({})
-  await prisma.appPlan.deleteMany({})
-  await prisma.appFeature.deleteMany({})
-  await prisma.app.deleteMany({})
+  console.log('Upserting ReporT app...')
 
-  console.log('Seeding ENT app...')
-
-  const entApp = await prisma.app.create({
-    data: {
-      slug: 'ent',
-      name: 'ENT',
+  // Usamos upsert para no borrar si hay dependencias (suscripciones)
+  const reportApp = await prisma.app.upsert({
+    where: { slug: 'report' },
+    update: {
+      name: 'ReporT',
       badge: 'Suite Empresarial',
       tagline: 'Reportes y gestión sin límites',
       heroAccent: 'sin límites',
-      description: 'ENT es la plataforma empresarial de UnikLabs para generar reportes detallados, gestionar datos operacionales y mantener a tu equipo alineado.',
+      description: 'ReporT es la plataforma empresarial de UnikLabs para generar reportes detallados, gestionar datos operacionales y mantener a tu equipo alineado.',
       isActive: true,
       comingSoon: false,
       iconName: 'Building2',
@@ -37,6 +32,51 @@ async function main() {
         { value: '40+', label: 'Empresas activas' },
         { value: '99.9%', label: 'Uptime' }
       ],
+    },
+    create: {
+      slug: 'report',
+      name: 'ReporT',
+      badge: 'Suite Empresarial',
+      tagline: 'Reportes y gestión sin límites',
+      heroAccent: 'sin límites',
+      description: 'ReporT es la plataforma empresarial de UnikLabs para generar reportes detallados, gestionar datos operacionales y mantener a tu equipo alineado.',
+      isActive: true,
+      comingSoon: false,
+      iconName: 'Building2',
+      tags: ['Reportes', 'Dashboard', 'Multi-usuario'],
+      stats: [
+        { value: '500+', label: 'Reportes al mes' },
+        { value: '40+', label: 'Empresas activas' },
+        { value: '99.9%', label: 'Uptime' }
+      ],
+    }
+  })
+
+  // Si existía la app 'ent', migramos sus suscripciones a 'report' y luego la borramos
+  const entApp = await prisma.app.findUnique({ where: { slug: 'ent' } })
+  if (entApp) {
+    console.log('Migrating subscriptions from ent to report...')
+    await prisma.subscription.updateMany({
+      where: { app_id: entApp.id },
+      data: { app_id: reportApp.id }
+    })
+    
+    console.log('Deleting old ent app data...')
+    await prisma.appFAQ.deleteMany({ where: { appId: entApp.id } })
+    await prisma.appPlan.deleteMany({ where: { appId: entApp.id } })
+    await prisma.appFeature.deleteMany({ where: { appId: entApp.id } })
+    await prisma.app.delete({ where: { id: entApp.id } })
+  }
+
+  // Actualizar features, plans y faqs para reportApp
+  console.log('Updating ReporT features, plans and faqs...')
+  await prisma.appFeature.deleteMany({ where: { appId: reportApp.id } })
+  await prisma.appPlan.deleteMany({ where: { appId: reportApp.id } })
+  await prisma.appFAQ.deleteMany({ where: { appId: reportApp.id } })
+
+  await prisma.app.update({
+    where: { id: reportApp.id },
+    data: {
       features: {
         create: [
           {
@@ -169,7 +209,7 @@ async function main() {
     }
   })
 
-  console.log(`Seeded app with slug: ${entApp.slug}`)
+  console.log(`Seeded app with slug: ${reportApp.slug}`)
 }
 
 main()

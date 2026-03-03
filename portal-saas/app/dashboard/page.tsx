@@ -31,13 +31,13 @@ import { prisma } from "@/lib/prisma";
 
 const availableApps = [
   {
-    id: "ent",
-    name: "ENT",
+    id: "report",
+    name: "ReporT",
     icon: Building2,
     description:
       "Suite empresarial para generación de reportes y gestión de datos.",
     tags: ["Reportes", "Dashboard", "Multi-usuario"],
-    link: "/apps/ent",
+    link: "/apps/report",
     available: true,
   },
   {

@@ -6,13 +6,13 @@ import { cn } from "@/lib/utils";
 
 const apps = [
     {
-        id: "ent",
+        id: "report",
         icon: Building2,
-        name: "ENT",
+        name: "ReporT",
         status: "Disponible",
         description: "Suite empresarial para generación de reportes y gestión de datos. Diseñada para equipos que necesitan visibilidad total de su operación.",
         tags: ["Reportes", "Dashboard", "Multi-usuario"],
-        link: "/apps/ent",
+        link: "/apps/report",
         available: true,
     },
     {
