@@ -8,6 +8,7 @@ import { AppPricingSection } from '@/components/marketing/apps/AppPricingSection
 import { AppStats } from '@/components/marketing/apps/AppStats'
 import { AppFAQ } from '@/components/marketing/apps/AppFAQ'
 import { AppCTAFinal } from '@/components/marketing/apps/AppCTAFinal'
+import { ReportShowcase } from '@/components/marketing/apps/ReportShowcase'
 
 interface PageProps {
     params: Promise<{ slug: string }>
@@ -52,6 +53,8 @@ export default async function AppPage({ params }: PageProps) {
             }} />
 
             {app.slug !== 'report' && <AppStats stats={app.stats as any} />}
+
+            {app.slug === 'report' && <ReportShowcase />}
 
             <AppFeatures appName={app.name} features={app.features} />
 

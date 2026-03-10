@@ -1,7 +1,6 @@
 "use client"
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ChevronRight } from 'lucide-react'
@@ -56,20 +55,20 @@ export function AppHero({ app }: AppHeroProps) {
                     </div>
                 </div>
 
-                {/* App Screenshot */}
-                <div className="relative max-w-5xl mx-auto">
-                    <div className="absolute inset-x-0 -top-40 h-[500px] bg-lime-500/10 blur-[120px] rounded-full -z-10" />
-                    <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 p-2 rounded-2xl shadow-2xl relative overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-10" />
-                        <Image
-                            src={`/images/apps/${app.slug}/dashboard-desktop.png`}
-                            alt={`${app.name} Dashboard`}
-                            width={1200}
-                            height={800}
-                            className="w-full h-auto rounded-xl border border-zinc-800/50 shadow-inner"
-                        />
+                {/* App Screenshot — only shown for non-report apps (report uses ReportShowcase) */}
+                {app.slug !== 'report' && (
+                    <div className="relative max-w-5xl mx-auto">
+                        <div className="absolute inset-x-0 -top-40 h-[500px] bg-lime-500/10 blur-[120px] rounded-full -z-10" />
+                        <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 p-2 rounded-2xl shadow-2xl relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-10" />
+                            <img
+                                src={`/images/apps/${app.slug}/dashboard-desktop.png`}
+                                alt={`${app.name} Dashboard`}
+                                className="w-full h-auto rounded-xl border border-zinc-800/50 shadow-inner block"
+                            />
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         </section>
     )
