@@ -58,10 +58,17 @@ export default async function AppPage({ params }: PageProps) {
             <AppPricingSection
                 appName={app.name}
                 appSlug={app.slug}
-                plans={app.plans.map(p => ({
-                    ...p,
-                    price: Number(p.price)
-                }))}
+                plans={app.plans.map(p => {
+                    const envKey = `PAYPAL_PLAN_${app.slug.toUpperCase()}_${p.name.toUpperCase()}`;
+                    const paypalPlanId = p.paypalPlanId || process.env[envKey] || null;
+
+                    return {
+                        ...p,
+                        price: Number(p.price),
+                        features: p.features as { text: string; included: boolean }[],
+                        paypalPlanId
+                    };
+                })}
             />
 
             <AppFAQ appName={app.name} faqs={app.faqs} />
