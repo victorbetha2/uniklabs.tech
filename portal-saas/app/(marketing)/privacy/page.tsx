@@ -101,10 +101,10 @@ export default function PrivacyPage() {
                         <div className="p-8 rounded-3xl bg-lime-500/5 border border-lime-500/20 text-center">
                             <p className="text-zinc-400 mb-4 font-medium uppercase tracking-widest text-xs">Contacto Legal</p>
                             <a
-                                href="mailto:victorbetha@gmail.com"
+                                href="mailto:info@uniklabs.tech"
                                 className="text-2xl font-bold text-lime-400 hover:text-lime-300 transition-colors"
                             >
-                                victorbetha@gmail.com
+                                info@uniklabs.tech
                             </a>
                         </div>
                     </section>

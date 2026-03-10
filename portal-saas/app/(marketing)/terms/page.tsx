@@ -108,7 +108,7 @@ export default function TermsPage() {
                         Estamos aquí para aclarar cualquier punto sobre el uso de nuestra plataforma.
                     </p>
                     <a
-                        href="mailto:victorbetha@gmail.com"
+                        href="mailto:info@uniklabs.tech"
                         className="inline-flex items-center justify-center px-8 py-4 bg-lime-500 text-black font-black rounded-2xl hover:bg-lime-400 transition-all shadow-[0_0_20px_rgba(132,204,22,0.2)]"
                     >
                         Contactar Soporte Legal
