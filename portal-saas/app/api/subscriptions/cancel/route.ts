@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { getCurrentDbUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendOwnerCancellationNotification } from "@/lib/email";
 
 async function cancelPayPalSubscription(subscriptionId: string): Promise<void> {
   const clientId = process.env.PAYPAL_CLIENT_ID;
@@ -76,7 +77,10 @@ export async function POST(req: NextRequest) {
         id: true,
         user_id: true,
         status: true,
+        plan: true,
         paypal_subscription_id: true,
+        user: { select: { email: true, name: true } },
+        app: { select: { name: true, slug: true } },
       },
     });
 
@@ -126,6 +130,32 @@ export async function POST(req: NextRequest) {
         updated_at: new Date(),
       },
     });
+
+    try {
+      await sendOwnerCancellationNotification({
+        customerEmail: subscription.user.email,
+        customerName: subscription.user.name,
+        appName: subscription.app.name,
+        appSlug: subscription.app.slug,
+        plan: subscription.plan,
+        subscriptionId: subscription.id,
+        paypalSubscriptionId: subscription.paypal_subscription_id,
+        reason: "cancelled",
+      });
+      console.info("[POST /api/subscriptions/cancel] Owner cancellation email sent", {
+        subscriptionId: subscription.id,
+        customerEmail: subscription.user.email,
+        appSlug: subscription.app.slug,
+      });
+    } catch (emailErr) {
+      const message = emailErr instanceof Error ? emailErr.message : String(emailErr);
+      console.error("[POST /api/subscriptions/cancel] Failed to send owner cancellation email", {
+        subscriptionId: subscription.id,
+        customerEmail: subscription.user.email,
+        appSlug: subscription.app.slug,
+        message,
+      });
+    }
 
     return Response.json({ success: true });
   } catch (err) {

@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CreditCard, Loader2 } from "lucide-react";
+import { CreditCard, ExternalLink, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
@@ -40,9 +41,149 @@ type Subscription = {
   current_period_end: string | null;
   app: {
     id: string;
+    slug: string;
     name: string;
+    accessAdminUrl?: string | null;
+    accessUserUrl?: string | null;
+    accessInstructionsMd?: string | null;
   };
 };
+
+type InlineChunk = { type: "text"; text: string } | { type: "link"; text: string; href: string };
+
+function parseInlineMarkdown(input: string): InlineChunk[] {
+  const chunks: InlineChunk[] = [];
+  const regex = /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g;
+  let cursor = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(input)) !== null) {
+    if (match.index > cursor) {
+      chunks.push({ type: "text", text: input.slice(cursor, match.index) });
+    }
+    chunks.push({ type: "link", text: match[1], href: match[2] });
+    cursor = match.index + match[0].length;
+  }
+
+  if (cursor < input.length) {
+    chunks.push({ type: "text", text: input.slice(cursor) });
+  }
+
+  return chunks;
+}
+
+function renderInlineMarkdown(input: string, keyPrefix: string): ReactNode[] {
+  return parseInlineMarkdown(input).map((chunk, index) => {
+    if (chunk.type === "text") {
+      return <span key={`${keyPrefix}-text-${index}`}>{chunk.text}</span>;
+    }
+    return (
+      <a
+        key={`${keyPrefix}-link-${index}`}
+        href={chunk.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-primary underline-offset-4 hover:underline"
+      >
+        {chunk.text}
+      </a>
+    );
+  });
+}
+
+function renderMarkdown(md?: string | null): ReactNode {
+  if (!md?.trim()) return null;
+
+  const lines = md.replaceAll("\r\n", "\n").split("\n");
+  const nodes: ReactNode[] = [];
+  let listBuffer: { type: "ul" | "ol"; items: string[] } | null = null;
+
+  const flushList = (prefix: string) => {
+    if (!listBuffer) return;
+    if (listBuffer.type === "ul") {
+      nodes.push(
+        <ul key={`${prefix}-ul-${nodes.length}`} className="list-disc ml-6 space-y-1 text-sm">
+          {listBuffer.items.map((item, index) => (
+            <li key={`${prefix}-ul-item-${index}`}>{renderInlineMarkdown(item, `${prefix}-ul-${index}`)}</li>
+          ))}
+        </ul>
+      );
+    } else {
+      nodes.push(
+        <ol key={`${prefix}-ol-${nodes.length}`} className="list-decimal ml-6 space-y-1 text-sm">
+          {listBuffer.items.map((item, index) => (
+            <li key={`${prefix}-ol-item-${index}`}>{renderInlineMarkdown(item, `${prefix}-ol-${index}`)}</li>
+          ))}
+        </ol>
+      );
+    }
+    listBuffer = null;
+  };
+
+  lines.forEach((rawLine, index) => {
+    const line = rawLine.trim();
+    const prefix = `md-${index}`;
+    if (!line) {
+      flushList(prefix);
+      return;
+    }
+    if (line.startsWith("### ")) {
+      flushList(prefix);
+      nodes.push(
+        <h4 key={`${prefix}-h4`} className="text-sm font-semibold mt-2">
+          {renderInlineMarkdown(line.slice(4), `${prefix}-inline`)}
+        </h4>
+      );
+      return;
+    }
+    if (line.startsWith("## ")) {
+      flushList(prefix);
+      nodes.push(
+        <h3 key={`${prefix}-h3`} className="text-base font-semibold mt-2">
+          {renderInlineMarkdown(line.slice(3), `${prefix}-inline`)}
+        </h3>
+      );
+      return;
+    }
+    if (line.startsWith("# ")) {
+      flushList(prefix);
+      nodes.push(
+        <h2 key={`${prefix}-h2`} className="text-lg font-semibold mt-2">
+          {renderInlineMarkdown(line.slice(2), `${prefix}-inline`)}
+        </h2>
+      );
+      return;
+    }
+    if (line.startsWith("- ")) {
+      if (!listBuffer || listBuffer.type !== "ul") {
+        flushList(prefix);
+        listBuffer = { type: "ul", items: [] };
+      }
+      listBuffer.items.push(line.slice(2));
+      return;
+    }
+
+    const orderedMatch = line.match(/^\d+\.\s+(.+)$/);
+    if (orderedMatch) {
+      if (!listBuffer || listBuffer.type !== "ol") {
+        flushList(prefix);
+        listBuffer = { type: "ol", items: [] };
+      }
+      listBuffer.items.push(orderedMatch[1]);
+      return;
+    }
+
+    flushList(prefix);
+    nodes.push(
+      <p key={`${prefix}-p`} className="text-sm leading-relaxed">
+        {renderInlineMarkdown(line, `${prefix}-inline`)}
+      </p>
+    );
+  });
+
+  flushList("md-end");
+  return <div className="space-y-2">{nodes}</div>;
+}
 
 const statusVariantMap: Record<
   string,
@@ -77,6 +218,7 @@ export default function SubscriptionsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCancelling, setIsCancelling] = useState<string | null>(null);
   const [subToCancel, setSubToCancel] = useState<Subscription | null>(null);
+  const [selectedAccessSub, setSelectedAccessSub] = useState<Subscription | null>(null);
 
   useEffect(() => {
     const success = searchParams.get("success");
@@ -183,6 +325,7 @@ export default function SubscriptionsPage() {
                   <TableHead>Estado</TableHead>
                   <TableHead>Inicio</TableHead>
                   <TableHead>Próximo pago</TableHead>
+                  <TableHead>Accesos</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -198,6 +341,20 @@ export default function SubscriptionsPage() {
                     </TableCell>
                     <TableCell>{formatDate(sub.started_at)}</TableCell>
                     <TableCell>{formatDate(sub.current_period_end)}</TableCell>
+                    <TableCell>
+                      {(sub.status === "active" || sub.status === "pending") &&
+                      (sub.app.accessAdminUrl || sub.app.accessUserUrl || sub.app.accessInstructionsMd) ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedAccessSub(sub)}
+                        >
+                          Ver accesos
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-right">
                       {(sub.status === "active" || sub.status === "pending") && (
                         <Button
@@ -239,6 +396,56 @@ export default function SubscriptionsPage() {
               Sí, cancelar suscripción
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!selectedAccessSub}
+        onOpenChange={(open) => !open && setSelectedAccessSub(null)}
+      >
+        <DialogContent className="sm:max-w-[640px]">
+          <DialogHeader>
+            <DialogTitle>Accesos de {selectedAccessSub?.app.name}</DialogTitle>
+            <DialogDescription>
+              Links e instrucciones cargados para esta suscripción.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            {selectedAccessSub?.app.accessAdminUrl && (
+              <a
+                href={selectedAccessSub.app.accessAdminUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between rounded-md border p-3 text-sm hover:bg-muted/40"
+              >
+                <span>Acceso Admin</span>
+                <ExternalLink className="h-4 w-4 text-muted-foreground" />
+              </a>
+            )}
+
+            {selectedAccessSub?.app.accessUserUrl && (
+              <a
+                href={selectedAccessSub.app.accessUserUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between rounded-md border p-3 text-sm hover:bg-muted/40"
+              >
+                <span>Acceso App</span>
+                <ExternalLink className="h-4 w-4 text-muted-foreground" />
+              </a>
+            )}
+
+            {selectedAccessSub?.app.accessInstructionsMd ? (
+              <div className="rounded-md border p-4 bg-muted/20">
+                {renderMarkdown(selectedAccessSub.app.accessInstructionsMd)}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No hay instrucciones adicionales para esta app.
+              </p>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

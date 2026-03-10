@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getPayPalBaseUrl } from "@/lib/paypal";
 import { provisionAdmin } from "@/lib/report-reporte";
+import {
+  sendCustomerWelcomeEmail,
+  sendOwnerCancellationNotification,
+} from "@/lib/email";
 
 type PayPalWebhookEvent = {
   event_type: string;
@@ -87,10 +91,43 @@ export async function POST(req: NextRequest) {
             include: { user: true, app: true },
           });
           if (subscription) {
+            const wasPending = subscription.status !== "active";
             await prisma.subscription.update({
               where: { id: subscription.id },
               data: { status: "active" },
             });
+
+            if (wasPending) {
+              try {
+                await sendCustomerWelcomeEmail({
+                customerEmail: subscription.user.email,
+                customerName: subscription.user.name,
+                plan: subscription.plan,
+                subscriptionId: subscription.id,
+                access: {
+                  appName: subscription.app.name,
+                  appSlug: subscription.app.slug,
+                  adminUrl: subscription.app.accessAdminUrl,
+                  userUrl: subscription.app.accessUserUrl,
+                  instructionsMd: subscription.app.accessInstructionsMd,
+                },
+              });
+              console.info("[PayPal webhook] Welcome email sent", {
+                subscriptionId: subscription.id,
+                customerEmail: subscription.user.email,
+                appSlug: subscription.app.slug,
+              });
+            } catch (emailErr) {
+              const message = emailErr instanceof Error ? emailErr.message : String(emailErr);
+              console.error("[PayPal webhook] Failed to send welcome email", {
+                subscriptionId: subscription.id,
+                customerEmail: subscription.user.email,
+                appSlug: subscription.app.slug,
+                message,
+              });
+            }
+            }
+
             if (subscription.app.slug === "report") {
               const name = subscription.user.name?.trim() ?? "";
               const spaceIndex = name.indexOf(" ");
@@ -123,10 +160,48 @@ export async function POST(req: NextRequest) {
       case "BILLING.SUBSCRIPTION.CANCELLED": {
         const subscriptionId = event.resource?.id;
         if (subscriptionId) {
-          await prisma.subscription.updateMany({
+          const subscription = await prisma.subscription.findFirst({
             where: { paypal_subscription_id: subscriptionId },
-            data: { status: "cancelled", cancelled_at: new Date() },
+            include: { user: true, app: true },
           });
+          if (subscription) {
+            await prisma.subscription.update({
+              where: { id: subscription.id },
+              data: { status: "cancelled", cancelled_at: new Date() },
+            });
+            try {
+              await sendOwnerCancellationNotification({
+                customerEmail: subscription.user.email,
+                customerName: subscription.user.name,
+                appName: subscription.app.name,
+                appSlug: subscription.app.slug,
+                plan: subscription.plan,
+                subscriptionId: subscription.id,
+                paypalSubscriptionId: subscription.paypal_subscription_id,
+                reason: "cancelled",
+              });
+              console.info("[PayPal webhook] Owner cancellation email sent", {
+                subscriptionId: subscription.id,
+                customerEmail: subscription.user.email,
+                appSlug: subscription.app.slug,
+                reason: "cancelled",
+              });
+            } catch (emailErr) {
+              const message = emailErr instanceof Error ? emailErr.message : String(emailErr);
+              console.error("[PayPal webhook] Failed to send owner cancellation email", {
+                subscriptionId: subscription.id,
+                customerEmail: subscription.user.email,
+                appSlug: subscription.app.slug,
+                reason: "cancelled",
+                message,
+              });
+            }
+          } else {
+            await prisma.subscription.updateMany({
+              where: { paypal_subscription_id: subscriptionId },
+              data: { status: "cancelled", cancelled_at: new Date() },
+            });
+          }
         }
         break;
       }
@@ -134,10 +209,48 @@ export async function POST(req: NextRequest) {
       case "BILLING.SUBSCRIPTION.EXPIRED": {
         const subscriptionId = event.resource?.id;
         if (subscriptionId) {
-          await prisma.subscription.updateMany({
+          const subscription = await prisma.subscription.findFirst({
             where: { paypal_subscription_id: subscriptionId },
-            data: { status: "expired" },
+            include: { user: true, app: true },
           });
+          if (subscription) {
+            await prisma.subscription.update({
+              where: { id: subscription.id },
+              data: { status: "expired" },
+            });
+            try {
+              await sendOwnerCancellationNotification({
+                customerEmail: subscription.user.email,
+                customerName: subscription.user.name,
+                appName: subscription.app.name,
+                appSlug: subscription.app.slug,
+                plan: subscription.plan,
+                subscriptionId: subscription.id,
+                paypalSubscriptionId: subscription.paypal_subscription_id,
+                reason: "expired",
+              });
+              console.info("[PayPal webhook] Owner cancellation email sent", {
+                subscriptionId: subscription.id,
+                customerEmail: subscription.user.email,
+                appSlug: subscription.app.slug,
+                reason: "expired",
+              });
+            } catch (emailErr) {
+              const message = emailErr instanceof Error ? emailErr.message : String(emailErr);
+              console.error("[PayPal webhook] Failed to send owner cancellation email", {
+                subscriptionId: subscription.id,
+                customerEmail: subscription.user.email,
+                appSlug: subscription.app.slug,
+                reason: "expired",
+                message,
+              });
+            }
+          } else {
+            await prisma.subscription.updateMany({
+              where: { paypal_subscription_id: subscriptionId },
+              data: { status: "expired" },
+            });
+          }
         }
         break;
       }

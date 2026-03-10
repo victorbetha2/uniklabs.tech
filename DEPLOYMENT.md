@@ -89,12 +89,15 @@ En el proyecto de Vercel: **Settings → Environment Variables**. Añade estas v
 | `PAYPAL_SANDBOX` | Si es `"false"` se usa la API **Live**; cualquier otro valor usa Sandbox | Opcional. En producción real pon `PAYPAL_SANDBOX=false` y usa credenciales **Live** |
 | `PAYPAL_WEBHOOK_ID` | ID del webhook de PayPal | PayPal Developer → Webhooks → tu endpoint → Webhook ID |
 | `PAYPAL_PLAN_REPORT_*` | IDs de planes (Starter, Team, etc.) | PayPal → Productos/Planes de suscripción. Deben ser del mismo entorno (Live o Sandbox) que las credenciales |
+| `RESEND_API_KEY` | API Key para enviar correos transaccionales | [Resend Dashboard](https://resend.com) |
+| `EMAIL_FROM` | Remitente verificado en Resend (ej. `UnikLabs <noreply@uniklabs.tech>`) | Dominio verificado en Resend |
+| `OWNER_NOTIFY_EMAIL` | Correo que recibe alertas de compra/cancelación | Usa `victorbetha@gmail.com` (o correo operativo) |
 | `REPORTR_API_URL` | URL base de la API ReporT (sin barra final) | Proporcionada por el equipo ReporT. Ej: `https://report-api.example.com` |
 | `REPORTR_API_TOKEN` | Token Bearer para la API externa ReporT | Proporcionado por el equipo ReporT. **Secreto:** usar Vercel Secrets; nunca en logs ni respuestas al cliente. |
 
 **PayPal en producción:** En Vercel, para cobros reales debes usar la app en modo **Live**: en [developer.paypal.com](https://developer.paypal.com/dashboard/applications) cambia a **Live**, copia Client ID y Secret de esa app, y en Vercel define `PAYPAL_SANDBOX=false` y esas credenciales. Los IDs de planes (`PAYPAL_PLAN_REPORT_STARTER`, etc.) deben ser los de los planes creados en **Live**, no los del Sandbox.
 
-Sin `DATABASE_URL` el portal no puede conectar con Neon. Sin las variables de Clerk, la autenticación y el webhook no funcionarán. Sin **`NEXT_PUBLIC_PAYPAL_CLIENT_ID`** en producción, la página de checkout falla con *"usePayPalScriptReducer must be used within a PayPalScriptProvider"*; sin el resto de variables de PayPal, la suscripción y el flujo de pago fallarán (p. ej. "Client Authentication failed" si usas credenciales Sandbox contra la API Live).
+Sin `DATABASE_URL` el portal no puede conectar con Neon. Sin las variables de Clerk, la autenticación y el webhook no funcionarán. Sin **`NEXT_PUBLIC_PAYPAL_CLIENT_ID`** en producción, la página de checkout falla con *"usePayPalScriptReducer must be used within a PayPalScriptProvider"*; sin el resto de variables de PayPal, la suscripción y el flujo de pago fallarán (p. ej. "Client Authentication failed" si usas credenciales Sandbox contra la API Live). Sin `RESEND_API_KEY`/`EMAIL_FROM`, no se enviarán correos automáticos de bienvenida al cliente ni notificaciones internas.
 
 ### 6. Webhook de Clerk (sincronizar usuarios con Neon)
 
@@ -137,7 +140,7 @@ Si el webhook no está configurado o la URL es incorrecta, las suscripciones se 
 | **Root Directory** | `portal-saas` |
 | **Framework Preset** | Next.js |
 | **Build Command** | `npm run build` (el `prebuild` genera Prisma antes) |
-| **Environment Variables** | `DATABASE_URL`, Clerk (`NEXT_PUBLIC_CLERK_*`, `CLERK_*`), PayPal (`NEXT_PUBLIC_PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_SANDBOX`, `PAYPAL_WEBHOOK_ID`, `PAYPAL_PLAN_*`), ENT Reporte (`ENT_REPORTE_API_URL`, `ENT_REPORTE_API_TOKEN`) |
+| **Environment Variables** | `DATABASE_URL`, Clerk (`NEXT_PUBLIC_CLERK_*`, `CLERK_*`), PayPal (`NEXT_PUBLIC_PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_SANDBOX`, `PAYPAL_WEBHOOK_ID`, `PAYPAL_PLAN_*`), Resend (`RESEND_API_KEY`, `EMAIL_FROM`, `OWNER_NOTIFY_EMAIL`), ReporT API (`REPORTR_API_URL`, `REPORTR_API_TOKEN`) |
 
 ---
 
@@ -176,3 +179,4 @@ Sí. Ese directorio contiene solo **código generado** (tipos TypeScript y el cl
 - **Base de datos:** Neon; configurar `DATABASE_URL` en Vercel.
 - **Clerk:** configurar las 3 variables y el webhook con la URL de tu app en Vercel.
 - **PayPal:** configurar `NEXT_PUBLIC_PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_SANDBOX`, `PAYPAL_WEBHOOK_ID` y los planes; y crear el webhook en PayPal con la URL `/api/webhooks/paypal` para que las suscripciones pasen a **active** y se registren los cobros.
+- **Resend (emails):** configurar `RESEND_API_KEY`, `EMAIL_FROM` y `OWNER_NOTIFY_EMAIL` para enviar bienvenida al cliente y avisos internos de compra/cancelación.

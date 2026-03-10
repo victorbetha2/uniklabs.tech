@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentDbUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendCustomerWelcomeEmail, sendOwnerPurchaseNotification } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,7 +28,14 @@ export async function POST(req: NextRequest) {
 
     const app = await prisma.app.findUnique({
       where: { slug: appId },
-      select: { id: true },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        accessAdminUrl: true,
+        accessUserUrl: true,
+        accessInstructionsMd: true,
+      },
     });
 
     if (!app) {
@@ -49,7 +57,7 @@ export async function POST(req: NextRequest) {
     // Create the subscription record in the database
     // We set it to 'active' because this endpoint is called after PayPal approval
     // The webhook will later confirm the payment and update details if needed
-    await prisma.subscription.create({
+    const created = await prisma.subscription.create({
       data: {
         user_id: user.id,
         app_id: app.id,
@@ -59,6 +67,60 @@ export async function POST(req: NextRequest) {
         current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Default 30 days
       },
     });
+
+    try {
+      await sendCustomerWelcomeEmail({
+        customerEmail: user.email,
+        customerName: user.name,
+        plan: plan.toLowerCase(),
+        subscriptionId: created.id,
+        access: {
+          appName: app.name,
+          appSlug: app.slug,
+          adminUrl: app.accessAdminUrl,
+          userUrl: app.accessUserUrl,
+          instructionsMd: app.accessInstructionsMd,
+        },
+      });
+      console.info("[POST /api/subscriptions/activate] Welcome email sent", {
+        subscriptionId: created.id,
+        customerEmail: user.email,
+        appSlug: app.slug,
+      });
+    } catch (emailErr) {
+      const message = emailErr instanceof Error ? emailErr.message : String(emailErr);
+      console.error("[POST /api/subscriptions/activate] Failed to send welcome email", {
+        subscriptionId: created.id,
+        customerEmail: user.email,
+        appSlug: app.slug,
+        message,
+      });
+    }
+
+    try {
+      await sendOwnerPurchaseNotification({
+        customerEmail: user.email,
+        customerName: user.name,
+        appName: app.name,
+        appSlug: app.slug,
+        plan: plan.toLowerCase(),
+        subscriptionId: created.id,
+        paypalSubscriptionId,
+      });
+      console.info("[POST /api/subscriptions/activate] Owner purchase/activation email sent", {
+        subscriptionId: created.id,
+        customerEmail: user.email,
+        appSlug: app.slug,
+      });
+    } catch (emailErr) {
+      const message = emailErr instanceof Error ? emailErr.message : String(emailErr);
+      console.error("[POST /api/subscriptions/activate] Failed to send owner notification", {
+        subscriptionId: created.id,
+        customerEmail: user.email,
+        appSlug: app.slug,
+        message,
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch (err) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentDbUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createPayPalSubscription } from "@/lib/paypal";
+import { sendOwnerPurchaseNotification } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -56,7 +57,7 @@ export async function POST(req: NextRequest) {
     const { id: paypalSubscriptionId, approvalUrl } =
       await createPayPalSubscription(paypalPlanId, returnUrl, cancelUrl);
 
-    await prisma.subscription.create({
+    const createdSubscription = await prisma.subscription.create({
       data: {
         user_id: user.id,
         app_id: app.id,
@@ -66,6 +67,31 @@ export async function POST(req: NextRequest) {
         current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       },
     });
+
+    try {
+      await sendOwnerPurchaseNotification({
+        customerEmail: user.email,
+        customerName: user.name,
+        appName: app.name,
+        appSlug: appId,
+        plan,
+        subscriptionId: createdSubscription.id,
+        paypalSubscriptionId,
+      });
+      console.info("[POST /api/subscriptions/create] Owner purchase email sent", {
+        subscriptionId: createdSubscription.id,
+        appSlug: appId,
+        customerEmail: user.email,
+      });
+    } catch (emailErr) {
+      const message = emailErr instanceof Error ? emailErr.message : String(emailErr);
+      console.error("[POST /api/subscriptions/create] Failed to send owner purchase email", {
+        subscriptionId: createdSubscription.id,
+        appSlug: appId,
+        customerEmail: user.email,
+        message,
+      });
+    }
 
     return NextResponse.json({ approvalUrl });
   } catch (err) {

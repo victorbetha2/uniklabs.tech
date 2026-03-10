@@ -32,6 +32,9 @@ model App {
   iconName    String            // nombre del ícono lucide: "Building2"
   tags        String[]          // ["Reportes", "Dashboard", "Multi-usuario"]
   stats       Json              // [{label: "Reportes/mes", value: "500+"}, ...]
+  accessAdminUrl      String?
+  accessUserUrl       String?
+  accessInstructionsMd String?  @db.Text
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   features    AppFeature[]
